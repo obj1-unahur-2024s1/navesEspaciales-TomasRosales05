@@ -3,48 +3,71 @@ class NaveEspacial {
 	var direccion = 0 
 	var combustible = 0
 	method acelerar(unNumero){
-		velocidad = velocidad  + unNumero
-		velocidad.max(100000)
+		velocidad = 100000.min(velocidad  + unNumero)
 	}
 	method desacelerar(unNumero){ 
-		velocidad = velocidad - unNumero
-		velocidad.max(0)
+		velocidad = 0.max(velocidad - unNumero)
 	}
 	method irHaciaElSol(){direccion = 10}
 	method escaparDelSol(){direccion = -10}
 	method ponerseParaleloAlSol(){direccion = 0}
-	method acercarseUnPocoAlSol(){direccion = direccion + 1}
-	method alejarseUnPocoDelSol(){direccion = direccion - 1}
+	method acercarseUnPocoAlSol(){direccion = (10).min(direccion + 1)}
+	method alejarseUnPocoDelSol(){direccion = (-10).max(direccion - 1)}
 	method cargarCombustible(numero){combustible = combustible + numero}
 	method descargarCombustible(numero){combustible = combustible - numero}
 	method estaTranquila() = combustible > 4000 && velocidad < 12000
+	method prepararViaje()
+	method initialize(){
+		if(not direccion.between(-10,10)){
+			self.error("direccion incorrecta")
+		}
+		else if(not velocidad.between(0,100000)){
+			self.error("direccion incorrecta")
+		}
+		else{}
+	}
 }
 
 class NavesBaliza inherits NaveEspacial{
 	var color 
-	method cambiarColorDeBaliza(colorNuevo){color = colorNuevo}
-	method prepararViaje(){
-		color = "verde"
+	method cambiarColorDeBaliza(colorNuevo){
+		self.validarColores(colorNuevo)
+		color = colorNuevo
+	}
+	override method prepararViaje(){
+		self.cambiarColorDeBaliza("verde")
 		self.ponerseParaleloAlSol()
 		self.cargarCombustible(30000)
 		self.acelerar(5000)
 	}
-	override method estaTranquila() = super() && color != "Rojo" or color != "rojo"
+	override method estaTranquila() = super() && color != "rojo"
 	method recibirAmenaza(){
 		self.irHaciaElSol()
-		color = "Rojo"
+		color = "rojo"
+	}
+	method initialize(){
+		self.validarColores(color)
+	}
+	
+	method validarColores(unColor) {
+		if(["rojo","verde","azul"].contains(unColor))
+			self.error("color incorrecto")
 	}
 }
 
 class NavesPasajeros inherits NaveEspacial {
 	var property personas
-	var property comida = 0
-	var property bebida = 0
+	var  comida = 0
+	var  bebida = 0
+	method bebida()=bebida
+	method comida()= comida
 	method cargarComida(cantidad){comida = comida + cantidad}
 	method cargarBebida(cantidad){bebida = bebida + cantidad}
-	method prepararViaje(){
-		self.cargarComida(4)
-		self.cargarBebida(6)
+	method descargarComida(cantidad){comida = comida - cantidad}
+	method descargarBebida(cantidad){bebida = bebida - cantidad}
+	override method prepararViaje(){
+		self.cargarComida(4 * personas)
+		self.cargarBebida(6 * personas)
 		self.acercarseUnPocoAlSol()
 		self.cargarCombustible(30000)
 		self.acelerar(5000)
@@ -57,9 +80,8 @@ class NavesPasajeros inherits NaveEspacial {
 }
 
 class NavesCombate inherits NaveEspacial{
-	var estaInvisible
-	var estanDesplegadosLosMisiles
-	var cantidadDeMensajesEmitidos = 0
+	var estaInvisible = false
+	var estanDesplegadosLosMisiles = true
 	const mensajes = []
 	method ponerseVisible(){estaInvisible = false}
 	method ponerseInvisible(){estaInvisible = true}
@@ -68,16 +90,15 @@ class NavesCombate inherits NaveEspacial{
 	method replegarMisiles(){estanDesplegadosLosMisiles = false}
 	method misilesDesplegados() = not estanDesplegadosLosMisiles
 	method emitirMensaje(mensaje){
-		cantidadDeMensajesEmitidos = cantidadDeMensajesEmitidos + 1
 		mensajes.add(mensaje)
 		return mensaje
 	}
-	method mensajesEmitidos() = cantidadDeMensajesEmitidos
+	method mensajesEmitidos() = mensajes.size()
 	method ultimoMensajeEmitido() = mensajes.last()
 	method primerMensajeEmitido() = mensajes.first()
 	method esEscueta() = mensajes.any({mensaje => mensaje.size() > 30})
 	method emitioMensaje(mensaje) = mensajes.contains(mensaje)
-	method prepararViaje(){
+	override method prepararViaje(){
 		estaInvisible = false
 		estanDesplegadosLosMisiles = true
 		self.cargarCombustible(30000)
